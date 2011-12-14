@@ -4,6 +4,6 @@
  {'hg': {'local-name': 'common_rosdeps', 'version': 'common_rosdeps-0.1.8', 'uri': 'https://kforge.ros.org/common/rosdepcore'}},
  {'hg' : {'local-name': 'rosjava_core', 'version': 'default', 'uri': 'https://rosjava.googlecode.com/hg'}},
  {'hg' : {'local-name': 'android', 'version': 'default', 'uri': 'https://android.rosjava.googlecode.com/hg'}},
- {'git': {'local-name': 'zeroconf', 'version': 'master', 'uri': 'git://github.com/snorridj/zeroconf-ros-pkg.git'}}
+ {'git': {'local-name': 'zeroconf_android', 'version': 'master', 'uri': 'git://github.com/snorridj/zeroconf_android.git'}}
 ]
 

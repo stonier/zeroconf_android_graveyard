@@ -1,31 +1,8 @@
-= Zero-Configuration =
+= Zero-Configuration for Android =
 
-This repository is populated by RoS packages for handling zero-configuration across 
-platforms. The implementations are convenient wrappers around platform-dependant 
-implementations whose purpose are both to expose a fairly standard sort of api as
-well as a ros api (topics and services) where practical.
+This repository is populated by RoS packages for handling zero-configuration on android.
+For this it is using jmdns. You will need the zeroconf_implementations stack.
 
-=== Platform Implementations ===
-
-* Avahi : c++ and python implementations for linux.
-* Jmdns : a java (generic) and a customised implementation for android.
-* Bonjour : implementations for windows and apple.
-
-=== Status ===
-
- * zeroconf_avahi : pushing to 100% ready.
- * jmdns : first builds
- * zeroconf_avahi_python : ...
- * zeroconf_avahi_embedded : ...
-
-=== Roadmap ===
-
-This is only a rough plan at the moment. In particular the network discovery tools needs
-some though on how to design and implement such a feature.
-
-* Avahi implementations
-* Jmdns and android implementations
-* Bonjour implementations
-* Discovery tools for network connectivity
-* Utilities
+Note that this is maintained as a separate stack because it cannot be installed and 
+compiled via rosdeps as the other packages are (needs the android sdk manually installed).
 
