@@ -12,17 +12,18 @@
         <pathelement location="${ros.pkg.android.dir}/library/src"/>
     </path> 
     -->
-
+    <exec executable="rospack" outputproperty="zeroconf_jmdns_path">
+      <arg line="find zeroconf_jmdns"/>
+    </exec>
     <!-- Jmdns Sources -->
-	<!-- bit ugly since we're relying on knowing where zeroconf_jmdns is but -->
-	<!-- don't want to make a dependency on that because that'll rope the jar -->
-    <echo message="copy zeroconf_jmdns sources" />
+    <echo message="copy zeroconf_jmdns sources from ${zeroconf_jmdns_path}" />
     <copy todir="src/javax">
-        <fileset dir="../zeroconf_jmdns/src/main/java/javax" />
+        <!--<fileset dir="../zeroconf_jmdns/src/main/java/javax" />-->
+        <fileset dir="${zeroconf_jmdns_path}/src/main/java/javax" />
     </copy>
 	<!-- Not actually using anymore, but -->
     <copy todir="src/ros">
-        <fileset dir="../zeroconf_jmdns/src/main/java/ros" />
+        <fileset dir="${zeroconf_jmdns_path}/src/main/java/ros" />
     </copy>
 	
 	<!-- Ros jar dependencies -->
