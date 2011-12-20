@@ -15,7 +15,9 @@
   <rosdep name="ant" />
   <rosdep name="java" />
 
-  <!-- Don't really want to depend on this as it is not android  -->
+  <depend package="rosjava"/>
+
+  <!-- Don't really want to depend on this as it is not android (export issues) -->
   <!-- <depend package="zeroconf_jmdns"/>  -->
    
   <export>
