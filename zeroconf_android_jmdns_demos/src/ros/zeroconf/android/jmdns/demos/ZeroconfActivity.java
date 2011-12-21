@@ -36,6 +36,7 @@ import ros.zeroconf.android.jmdns.Logger;
  */
 public class ZeroconfActivity extends Activity {
 
+	
 	/********************
 	 * Background Thread
 	 *******************/
@@ -57,6 +58,7 @@ public class ZeroconfActivity extends Activity {
 	private class DiscoveryTask extends AsyncTask<Zeroconf, String, Void> {
 
 		protected Void doInBackground(Zeroconf... zeroconfs) {
+			publishProgress("Discovery starting");
 			if ( zeroconfs.length == 1 ) {
 				Zeroconf zconf = zeroconfs[0];
 				android.util.Log.i("zeroconf", "*********** Zeroconf Discovery Test **************");
@@ -84,8 +86,10 @@ public class ZeroconfActivity extends Activity {
 	    }
 
 	    protected void onProgressUpdate(String... progress) {
+	    	TextView tv = (TextView) findViewById(R.id.mytextview);
 	    	for (String msg : progress ) {
 	    		logger.println("Progress update: " + msg);	
+		    	tv.append(msg);
 	    	}
 	        //setProgressPercent(progress[0]);
 	    }
@@ -103,11 +107,13 @@ public class ZeroconfActivity extends Activity {
     {
     	// gui
         super.onCreate(savedInstanceState);
-        TextView tv = new TextView(this);
+        //tv = new TextView(this);
+        setContentView(R.layout.main);
+        TextView tv = (TextView)findViewById(R.id.mytextview);
 		tv.setText("Dude is babbling.");
-        setContentView(tv);
+
         logger = new Logger();
-        zeroconf = new Zeroconf(logger);
+		zeroconf = new Zeroconf(logger);
 
         new PublisherTask().execute(zeroconf);
         new DiscoveryTask().execute(zeroconf);
