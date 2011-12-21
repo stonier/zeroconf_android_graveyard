@@ -6,7 +6,7 @@
   </description>
   <author>Daniel Stonier</author>
   <license>BSD</license>
-  <review status="unreviewed" notes=""/>
+  <review status="experimental]" notes=""/>
   <url>http://ros.org/wiki/zeroconf_android_jmdns_demos</url>
   
   <depend package="zeroconf_android_jmdns"/>

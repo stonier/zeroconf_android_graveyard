@@ -1,19 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="android_gingerbread" default="debug">
 	
-  <!-- Variables -->
   <property file="ros.properties" />
   <property file="project.properties" />
-
-  <!-- Copy across jmdns sources -->
-  <exec executable="rospack" outputproperty="zeroconf_jmdns_path">
-    <arg line="find zeroconf_jmdns"/>
-  </exec>
-  <echo message="copy zeroconf_jmdns sources from ${zeroconf_jmdns_path}" />
-  <copy todir="src/javax">
-      <fileset dir="${zeroconf_jmdns_path}/src/main/java/javax" />
-  </copy>
-
-  <!-- The build! -->
   <import file="${ros.pkg.rosjava_bootstrap.dir}/android.xml" />
 </project>
