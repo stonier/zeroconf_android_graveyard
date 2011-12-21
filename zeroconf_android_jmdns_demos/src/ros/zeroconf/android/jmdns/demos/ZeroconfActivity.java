@@ -8,7 +8,8 @@ import javax.jmdns.ServiceInfo;
 import android.app.Activity;
 import android.os.Bundle;
 import android.widget.TextView;
-import ros.zeroconf.android.jmdns.Zeroconf;
+import ros.zeroconf.jmdns.Zeroconf;
+import ros.zeroconf.android.jmdns.Logger;
 
 //private class DiscoveryTask extends AsyncTask<Zeroconf, String, void> {
 //
@@ -51,6 +52,7 @@ import ros.zeroconf.android.jmdns.Zeroconf;
 public class ZeroconfActivity extends Activity {
 
 	private Zeroconf zeroconf;
+	private Logger logger;
 	
     /** Called when the activity is first created. */
     @Override
@@ -61,19 +63,17 @@ public class ZeroconfActivity extends Activity {
         TextView tv = new TextView(this);
 		tv.setText("Dude is babbling.");
         setContentView(tv);
+        logger = new Logger();
+        zeroconf = new Zeroconf(logger);
         
-        zeroconf = new Zeroconf();
-        
-        // adb logcat zeroconf:I *:S
-        android.util.Log.i("zeroconf","*********** Zeroconf Listener Test **************");
         // adb logcat System.out:I *:S
-		// System.out.println("************ Zerconf Listener Test ************");
+        // adb logcat zeroconf:I *:S
+        logger.println("*********** Zeroconf Listener Test **************");
         zeroconf.addListener("_ros-master._tcp","local");
         int i = 0;
         while( i < 10 ) {
     		try {
-    			android.util.Log.i("zeroconf","************ Discovered Services ************");
-    			// System.out.println("************ Discovered Services ************");
+    			logger.println("************ Discovered Services ************");
     			List<ServiceInfo> service_infos = zeroconf.listDiscoveredServices();
     			for ( ServiceInfo service_info : service_infos ) {
 	        		zeroconf.display(service_info);
@@ -86,15 +86,13 @@ public class ZeroconfActivity extends Activity {
         }
         zeroconf.removeListener("_ros-master._tcp","local");
         
-        android.util.Log.i("zeroconf","*********** Zeroconf Publisher Test **************");
-        //System.out.println("*********** Zeroconf Publisher Test **************");
+        logger.println("*********** Zeroconf Publisher Test **************");
         zeroconf.addService("DudeMaster", "_ros-master._tcp", "local", 8888, "Dude's test master");
     }
     
     @Override
     public void onDestroy() {
-    	android.util.Log.i("zeroconf","*********** Zeroconf Destroy **************");
-    	//System.out.println("*********** Zeroconf Destroy **************");
+    	logger.println("*********** Zeroconf Destroy **************");
 		zeroconf.removeAllServices();
 		super.onDestroy();
     }
