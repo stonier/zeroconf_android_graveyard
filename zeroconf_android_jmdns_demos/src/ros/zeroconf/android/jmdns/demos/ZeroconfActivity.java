@@ -6,30 +6,15 @@ import java.util.List;
 import javax.jmdns.ServiceInfo;
 
 import android.app.Activity;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.widget.TextView;
 import ros.zeroconf.jmdns.Zeroconf;
 import ros.zeroconf.android.jmdns.Logger;
 
-//private class DiscoveryTask extends AsyncTask<Zeroconf, String, void> {
-//
-//	protected void doInBackground(Zeroconf zeroconf) {
-//        int count = urls.length;
-//        long totalSize = 0;
-//        for (int i = 0; i < count; i++) {
-//            totalSize += Downloader.downloadFile(urls[i]);
-//            publishProgress((int) ((i / (float) count) * 100));
-//        }
-//    }
-//
-//    protected void onProgressUpdate(Integer... progress) {
-//        setProgressPercent(progress[0]);
-//    }
-//
-//    protected void onPostExecute(Long result) {
-//        showDialog("Downloaded " + result + " bytes");
-//    }
-//}
+// adb logcat System.out:I *:S
+// adb logcat zeroconf:I *:S
+
 /**
  * This test does : 
  * 
@@ -51,6 +36,64 @@ import ros.zeroconf.android.jmdns.Logger;
  */
 public class ZeroconfActivity extends Activity {
 
+	/********************
+	 * Background Thread
+	 *******************/
+	private class PublisherTask extends AsyncTask<Zeroconf, String, Void> {
+
+		protected Void doInBackground(Zeroconf... zeroconfs) {
+			if ( zeroconfs.length == 1 ) {
+				Zeroconf zconf = zeroconfs[0];
+				android.util.Log.i("zeroconf", "*********** Zeroconf Publisher Test **************");
+				zconf.addService("DudeMaster", "_ros-master._tcp", "local", 8888, "Dude's test master");//	            totalSize += Downloader.downloadFile(urls[i]);
+				android.util.Log.i("zeroconf", "**************************************************");
+			} else {
+				android.util.Log.i("zeroconf", "Error - PublisherTask::doInBackground received #zeroconfs != 1");
+			}
+			return null;
+	    }
+	}
+
+	private class DiscoveryTask extends AsyncTask<Zeroconf, String, Void> {
+
+		protected Void doInBackground(Zeroconf... zeroconfs) {
+			if ( zeroconfs.length == 1 ) {
+				Zeroconf zconf = zeroconfs[0];
+				android.util.Log.i("zeroconf", "*********** Zeroconf Discovery Test **************");
+		        zconf.addListener("_ros-master._tcp","local");
+		        int i = 0;
+		        while( i < 10 ) {
+		    		try {
+		    			android.util.Log.i("zeroconf", "************ Discovered Services ************");
+		    			List<ServiceInfo> service_infos = zconf.listDiscoveredServices();
+		    			for ( ServiceInfo service_info : service_infos ) {
+			        		zconf.display(service_info);
+		    			}
+		        		Thread.sleep(1000L);
+				    } catch (InterruptedException e) {
+				        e.printStackTrace();
+				    }
+		    		++i;
+		        }
+		        zconf.removeListener("_ros-master._tcp","local");
+	//			publishProgress("midway");
+			} else {
+				android.util.Log.i("zeroconf", "Error - DiscoveryTask::doInBackground received #zeroconfs != 1");
+			}
+			return null;
+	    }
+
+	    protected void onProgressUpdate(String... progress) {
+	    	for (String msg : progress ) {
+	    		logger.println("Progress update: " + msg);	
+	    	}
+	        //setProgressPercent(progress[0]);
+	    }
+	}
+
+	/********************
+	 * Variables
+	 *******************/
 	private Zeroconf zeroconf;
 	private Logger logger;
 	
@@ -65,29 +108,9 @@ public class ZeroconfActivity extends Activity {
         setContentView(tv);
         logger = new Logger();
         zeroconf = new Zeroconf(logger);
-        
-        // adb logcat System.out:I *:S
-        // adb logcat zeroconf:I *:S
-        logger.println("*********** Zeroconf Listener Test **************");
-        zeroconf.addListener("_ros-master._tcp","local");
-        int i = 0;
-        while( i < 10 ) {
-    		try {
-    			logger.println("************ Discovered Services ************");
-    			List<ServiceInfo> service_infos = zeroconf.listDiscoveredServices();
-    			for ( ServiceInfo service_info : service_infos ) {
-	        		zeroconf.display(service_info);
-    			}
-        		Thread.sleep(1000L);
-		    } catch (InterruptedException e) {
-		        e.printStackTrace();
-		    }
-    		++i;
-        }
-        zeroconf.removeListener("_ros-master._tcp","local");
-        
-        logger.println("*********** Zeroconf Publisher Test **************");
-        zeroconf.addService("DudeMaster", "_ros-master._tcp", "local", 8888, "Dude's test master");
+
+        new PublisherTask().execute(zeroconf);
+        new DiscoveryTask().execute(zeroconf);
     }
     
     @Override
