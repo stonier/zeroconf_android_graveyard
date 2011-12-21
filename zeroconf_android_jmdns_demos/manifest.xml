@@ -9,12 +9,14 @@
   <review status="experimental]" notes=""/>
   <url>http://ros.org/wiki/zeroconf_android_jmdns_demos</url>
   
+  <depend package="rosjava" />
   <depend package="zeroconf_android_jmdns"/>
+  <depend package="android_gingerbread" />
   
   <export>
-    <rosjava-src location="gen" />
-    <rosjava-src location="src" />
-    <rosjava-src location="res" />
     <rosjava-android-app target="android-10" />
+    <rosjava-src location="src" />
+    <rosjava-src location="gen" />
+    <rosjava-src location="res" />
   </export>
 </package>
