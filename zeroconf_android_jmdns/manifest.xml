@@ -12,9 +12,8 @@
   <rosdep name="ant" />
   <rosdep name="java" />
 
-  <depend package="rosjava"/>
+  <depend package="rosjava_bootstrap"/>
   <depend package="zeroconf_jmdns"/>
-  <depend package="android_gingerbread" />
 
   <export>
     <rosjava-android-lib target="android-10"/>
