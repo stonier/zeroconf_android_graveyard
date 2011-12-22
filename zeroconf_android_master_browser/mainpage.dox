@@ -1,0 +1,14 @@
+/**
+\mainpage
+\htmlinclude manifest.html
+
+@section Overview
+
+Detects various zeroconf services in the ros ecosystem. These services are maintained
+as a somewhat 'official' list internally.
+
+ - _ros-master._tcp/_udp
+ - _concert-master._tcp/_udp
+ - _app-manager._tcp/_udp
+
+*/

@@ -1,13 +1,14 @@
 <package>
-  <description brief="Android packages for zeroconf testing/demos">
+  <description brief="master browser app for android">
 
-     Android packages for zeroconf testing/demo purposes.
+     Uses jmdns to do zeroconf discovery of various ros
+     style services (ros, concert, app managers).
 
   </description>
   <author>Daniel Stonier</author>
   <license>BSD</license>
   <review status="experimental" notes=""/>
-  <url>http://ros.org/wiki/zeroconf_android_jmdns_demos</url>
+  <url>http://ros.org/wiki/zeroconf_android_master_browser</url>
   
   <depend package="rosjava_bootstrap"/>
   <depend package="zeroconf_android_jmdns"/>

@@ -1,4 +1,4 @@
-package ros.zeroconf.android.jmdns.demos;
+package ros.zeroconf.android.jmdns.master_browser;
 
 import java.lang.Thread;
 import java.util.List;
@@ -19,12 +19,11 @@ import ros.zeroconf.android.jmdns.Logger;
 /**
  * This test does : 
  * 
+ * 0) publish a _ros-master._tcp service (DudeMaster)
  * 1) listens for _ros-master._tcp services
- * 2) every second for 10 seconds it will display currently found services
- * 3) deactivate listeners
- * 4) publish a _ros-master._tcp service (DudeMaster)
- * 5) wait 10 seconds
- * 6) remove all services
+ * 2) every second it will display currently found services
+ * 3) On destroy, deactivate listeners
+ * 4) On destroy, remove all services
  * 
  * Best way to use it is to use avahi to publish/browse on the other end, in oen shell:
  * 
@@ -40,30 +39,6 @@ public class ZeroconfActivity extends Activity {
 	/****************************************
 	 * Threads, Tasks and Handlers
 	 ****************************************/
-	private class PublisherTask extends AsyncTask<Zeroconf, String, Void> {
-
-		protected Void doInBackground(Zeroconf... zeroconfs) {
-			if ( zeroconfs.length == 1 ) {
-				Zeroconf zconf = zeroconfs[0];
-				String msg = "*********** Publishing a Ros Master **************\n"
-				               + " + DudeMaster [_ros-master._tcp][local][8888]\n";
-				publishProgress(msg);
-				zconf.addService("DudeMaster", "_ros-master._tcp", "local", 8888, "Dude's test master");
-			} else {
-				publishProgress("Error - PublisherTask::doInBackground received #zeroconfs != 1");
-			}
-			return null;
-	    }
-		
-	    protected void onProgressUpdate(String... progress) {
-	    	TextView tv = (TextView) findViewById(R.id.mytextview);
-	    	for (String msg : progress ) {
-	    		android.util.Log.i("zeroconf", msg);	
-		    	tv.append(msg + "\n");
-	    	}
-	    }
-	}
-
 	private class DiscoveryTask extends AsyncTask<Zeroconf, String, Void> {
 
 		protected Void doInBackground(Zeroconf... zeroconfs) {
@@ -71,8 +46,7 @@ public class ZeroconfActivity extends Activity {
 				Zeroconf zconf = zeroconfs[0];
 		        zconf.addListener("_ros-master._tcp","local");
 		        publishProgress("*********** Discovering Ros Masters **************");
-		        int i = 0;
-		        while( i < 10 ) {
+		        while( true ) {
 		    		try {
 		    			List<ServiceInfo> service_infos = zconf.listDiscoveredServices();
 		    			publishProgress("------------------------------------------");
@@ -83,13 +57,11 @@ public class ZeroconfActivity extends Activity {
 		    			} else {
 			    			publishProgress("...");
 		    			}
-		        		Thread.sleep(1000L);
+		        		Thread.sleep(3000L);
 				    } catch (InterruptedException e) {
 				        e.printStackTrace();
 				    }
-		    		++i;
 		        }
-		        zconf.removeListener("_ros-master._tcp","local");
 			} else {
 				publishProgress("Error - DiscoveryTask::doInBackground received #zeroconfs != 1");
 			}
@@ -130,13 +102,13 @@ public class ZeroconfActivity extends Activity {
         logger = new Logger();
 		zeroconf = new Zeroconf(logger);
 
-        new PublisherTask().execute(zeroconf);
         new DiscoveryTask().execute(zeroconf);
     }
     
     @Override
     public void onDestroy() {
     	logger.println("*********** Zeroconf Destroy **************");
+        zeroconf.removeListener("_ros-master._tcp","local");
 		zeroconf.removeAllServices();
 		super.onDestroy();
     }
