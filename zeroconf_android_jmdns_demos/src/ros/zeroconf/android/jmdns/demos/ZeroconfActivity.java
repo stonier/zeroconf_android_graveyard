@@ -9,6 +9,7 @@ import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.widget.TextView;
+import android.text.method.ScrollingMovementMethod;
 import ros.zeroconf.jmdns.Zeroconf;
 import ros.zeroconf.android.jmdns.Logger;
 
@@ -45,31 +46,43 @@ public class ZeroconfActivity extends Activity {
 		protected Void doInBackground(Zeroconf... zeroconfs) {
 			if ( zeroconfs.length == 1 ) {
 				Zeroconf zconf = zeroconfs[0];
-				android.util.Log.i("zeroconf", "*********** Zeroconf Publisher Test **************");
-				zconf.addService("DudeMaster", "_ros-master._tcp", "local", 8888, "Dude's test master");//	            totalSize += Downloader.downloadFile(urls[i]);
-				android.util.Log.i("zeroconf", "**************************************************");
+				String msg = "*********** Publishing a Ros Master **************\n"
+				               + " + DudeMaster [_ros-master._tcp][local][8888]\n";
+				publishProgress(msg);
+				zconf.addService("DudeMaster", "_ros-master._tcp", "local", 8888, "Dude's test master");
 			} else {
-				android.util.Log.i("zeroconf", "Error - PublisherTask::doInBackground received #zeroconfs != 1");
+				publishProgress("Error - PublisherTask::doInBackground received #zeroconfs != 1");
 			}
 			return null;
+	    }
+		
+	    protected void onProgressUpdate(String... progress) {
+	    	TextView tv = (TextView) findViewById(R.id.mytextview);
+	    	for (String msg : progress ) {
+	    		android.util.Log.i("zeroconf", "Progress update: " + msg);	
+		    	tv.append(msg + "\n");
+	    	}
 	    }
 	}
 
 	private class DiscoveryTask extends AsyncTask<Zeroconf, String, Void> {
 
 		protected Void doInBackground(Zeroconf... zeroconfs) {
-			publishProgress("Discovery starting");
 			if ( zeroconfs.length == 1 ) {
 				Zeroconf zconf = zeroconfs[0];
-				android.util.Log.i("zeroconf", "*********** Zeroconf Discovery Test **************");
 		        zconf.addListener("_ros-master._tcp","local");
+		        publishProgress("*********** Discovering Ros Masters **************");
 		        int i = 0;
 		        while( i < 10 ) {
 		    		try {
-		    			android.util.Log.i("zeroconf", "************ Discovered Services ************");
 		    			List<ServiceInfo> service_infos = zconf.listDiscoveredServices();
-		    			for ( ServiceInfo service_info : service_infos ) {
-			        		zconf.display(service_info);
+		    			publishProgress("------------------------------------------");
+		    			if ( service_infos.size() > 0 ) {
+			    			for ( ServiceInfo service_info : service_infos ) {
+				        		publishProgress(zconf.toString(service_info));
+			    			}
+		    			} else {
+			    			publishProgress("...");
 		    			}
 		        		Thread.sleep(1000L);
 				    } catch (InterruptedException e) {
@@ -78,9 +91,8 @@ public class ZeroconfActivity extends Activity {
 		    		++i;
 		        }
 		        zconf.removeListener("_ros-master._tcp","local");
-	//			publishProgress("midway");
 			} else {
-				android.util.Log.i("zeroconf", "Error - DiscoveryTask::doInBackground received #zeroconfs != 1");
+				publishProgress("Error - DiscoveryTask::doInBackground received #zeroconfs != 1");
 			}
 			return null;
 	    }
@@ -88,10 +100,16 @@ public class ZeroconfActivity extends Activity {
 	    protected void onProgressUpdate(String... progress) {
 	    	TextView tv = (TextView) findViewById(R.id.mytextview);
 	    	for (String msg : progress ) {
-	    		logger.println("Progress update: " + msg);	
-		    	tv.append(msg);
+	    		android.util.Log.i("zeroconf", "Progress update: " + msg);	
+		    	tv.append(msg + "\n");
 	    	}
-	        //setProgressPercent(progress[0]);
+	    	int line_count = tv.getLineCount(); 
+	    	int view_height = tv.getHeight();
+	    	int pixels_per_line = tv.getLineHeight();
+	    	int pixels_difference = line_count*pixels_per_line - view_height;
+	    	if ( pixels_difference > 0 ) {
+	    		tv.scrollTo(0, pixels_difference);
+	    	}
 	    }
 	}
 
@@ -110,8 +128,8 @@ public class ZeroconfActivity extends Activity {
         //tv = new TextView(this);
         setContentView(R.layout.main);
         TextView tv = (TextView)findViewById(R.id.mytextview);
-		tv.setText("Dude is babbling.");
-
+        tv.setMovementMethod(new ScrollingMovementMethod());
+        tv.setText("");
         logger = new Logger();
 		zeroconf = new Zeroconf(logger);
 
