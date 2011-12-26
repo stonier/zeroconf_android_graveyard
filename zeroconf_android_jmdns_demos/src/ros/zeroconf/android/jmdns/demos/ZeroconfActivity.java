@@ -2,9 +2,7 @@ package ros.zeroconf.android.jmdns.demos;
 
 import java.lang.Thread;
 import java.util.List;
-
 import javax.jmdns.ServiceInfo;
-
 import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -12,6 +10,7 @@ import android.widget.TextView;
 import android.text.method.ScrollingMovementMethod;
 import ros.zeroconf.jmdns.Zeroconf;
 import ros.zeroconf.android.jmdns.Logger;
+import org.ros.message.zeroconf_comms.DiscoveredService;
 
 // adb logcat System.out:I *:S
 // adb logcat zeroconf:I *:S
@@ -74,11 +73,11 @@ public class ZeroconfActivity extends Activity {
 		        int i = 0;
 		        while( i < 10 ) {
 		    		try {
-		    			List<ServiceInfo> service_infos = zconf.listDiscoveredServices();
+		    			List<DiscoveredService> discovered_services = zconf.listDiscoveredServices();
 		    			publishProgress("------------------------------------------");
-		    			if ( service_infos.size() > 0 ) {
-			    			for ( ServiceInfo service_info : service_infos ) {
-				        		publishProgress(zconf.toString(service_info));
+		    			if ( discovered_services.size() > 0 ) {
+			    			for ( DiscoveredService discovered_service : discovered_services ) {
+				        		publishProgress(zconf.toString(discovered_service));
 			    			}
 		    			} else {
 			    			publishProgress("...");
