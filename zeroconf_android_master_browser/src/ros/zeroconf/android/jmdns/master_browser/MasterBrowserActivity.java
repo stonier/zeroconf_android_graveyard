@@ -2,9 +2,6 @@ package ros.zeroconf.android.jmdns.master_browser;
 
 import java.lang.Thread;
 import java.util.List;
-
-import javax.jmdns.ServiceInfo;
-
 import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -12,7 +9,7 @@ import android.os.Bundle;
 import android.widget.TextView;
 import android.text.method.ScrollingMovementMethod;
 import ros.zeroconf.jmdns.Zeroconf;
-import ros.zeroconf.jmdns.ZeroconfListener;
+import ros.zeroconf.jmdns.ZeroconfDiscoveryHandler;
 import ros.zeroconf.android.jmdns.Logger;
 
 // adb logcat System.out:I *:S
@@ -43,15 +40,15 @@ public class MasterBrowserActivity extends Activity {
 	 ****************************************/
 	private Handler handler;
 	
-	public class Listener implements ZeroconfListener {
+	public class DiscoveryHandler implements ZeroconfDiscoveryHandler {
 		
-		public void serviceAdded(ServiceInfo service) {
-			final ServiceInfo service_info = service;
+		public void serviceAdded(DiscoveredService service) {
+			final DiscoveredService discovered_service = service;
 			handler.post(new Runnable() {
 				@Override
 				public void run() {
 					TextView tv = (TextView) findViewById(R.id.mytextview);
-			    	String result = "[+] Service added: " + service_info.getQualifiedName() + "\n";
+			    	String result = "[+] Service added: " + discovered_service.name + "." + discovered_service.type + "." + discovered_service.domain + ".\n";
 					tv.append(result);
 			    	int line_count = tv.getLineCount(); 
 			    	int view_height = tv.getHeight();
@@ -63,13 +60,13 @@ public class MasterBrowserActivity extends Activity {
 				}
 			});
 		}
-		public void serviceRemoved(ServiceInfo service) {
-			final ServiceInfo service_info = service;
+		public void serviceRemoved(DiscoveredService service) {
+			final DiscoveredService discovered_service = service;
 			handler.post(new Runnable() {
 				@Override
 				public void run() {
 					TextView tv = (TextView) findViewById(R.id.mytextview);
-			    	String result = "[-] Service removed: " + service_info.getQualifiedName() + "\n";
+			    	String result = "[-] Service added: " + discovered_service.name + "." + discovered_service.type + "." + discovered_service.domain + ".\n";
 					tv.append(result);
 			    	int line_count = tv.getLineCount(); 
 			    	int view_height = tv.getHeight();
@@ -81,18 +78,19 @@ public class MasterBrowserActivity extends Activity {
 				}
 			});
 		}
-		public void serviceResolved(ServiceInfo service) {
-			final ServiceInfo service_info = service;
+		public void serviceResolved(DiscoveredService service) {
+			final DiscoveredService discovered_service = service;
 			handler.post(new Runnable() {
 				@Override
 				public void run() {
 					TextView tv = (TextView) findViewById(R.id.mytextview);
-			    	String result = "    Service Resolved:\n";
-			    	result += "    Name   : " + service_info.getName() + "\n";
-			    	result += "    Type   : " + service_info.getType() + "\n";
-			    	result += "    Port   : " + service_info.getPort() + "\n";
-			    	for ( int i = 0; i < service_info.getInetAddresses().length; ++i ) {
-			    		result += "    Address: " + service_info.getInetAddresses()[i].getHostAddress() + "\n";
+			    	String result = "[=] Service resolved: " + discovered_service.name + "." + discovered_service.type + "." + discovered_service.domain + ".\n";
+			    	result += "    Port   : " + discovered_service.port + "\n";
+			    	for ( String address : discovered_service.ipv4_addresses ) {
+			    		result += "    Address: " + address + "\n";
+			    	}
+			    	for ( String address : discovered_service.ipv6_addresses ) {
+			    		result += "    Address: " + address + "\n";
 			    	}
 					android.util.Log.i("zeroconf", result);	
 					tv.append(result);
@@ -110,13 +108,13 @@ public class MasterBrowserActivity extends Activity {
 
 	private class AddListenersTask extends AsyncTask<Zeroconf, String, Void> {
 
-		private Listener listener;
+		private DiscoveryHandler discovery_handler;
 
 		protected Void doInBackground(Zeroconf... zeroconfs) {
-			listener = new Listener();
+			discovery_handler = new DiscoveryHandler();
 			if ( zeroconfs.length == 1 ) {
 				Zeroconf zconf = zeroconfs[0];
-				zconf.setDefaultListenerCallback(listener);
+				zconf.setDefaultDiscoveryCallback(discovery_handler);
 		        zconf.addListener("_ros-master._tcp","local");
 		        zconf.addListener("_ros-master._udp","local");
 		        zconf.addListener("_concert-master._tcp","local");
