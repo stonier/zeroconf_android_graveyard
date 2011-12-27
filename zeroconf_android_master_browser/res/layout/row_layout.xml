@@ -33,6 +33,7 @@
         android:text="Simple application that shows how to use RelativeLayout" 
     />
     <TextView
+        android:id="@+id/service_name"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         

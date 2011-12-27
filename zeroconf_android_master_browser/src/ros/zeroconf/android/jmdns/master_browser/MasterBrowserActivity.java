@@ -169,7 +169,7 @@ public class MasterBrowserActivity extends Activity implements OnItemClickListen
         lv = (ListView)findViewById(R.id.discovered_services_list);
         lv.setOnItemClickListener(this);
 //        adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1 , services_list);
-        adapter = new ArrayAdapter<String>(this, R.layout.row_layout, R.id.label, services_list);
+        adapter = new ArrayAdapter<String>(this, R.layout.row_layout, R.id.service_name, services_list);
         lv.setAdapter(adapter);
         tv = (TextView)findViewById(R.id.mytextview);
         tv.setMovementMethod(new ScrollingMovementMethod());
