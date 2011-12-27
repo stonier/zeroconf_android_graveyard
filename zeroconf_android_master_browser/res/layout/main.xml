@@ -4,7 +4,7 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     >
-<!-- android:layout_height="wrap_content" -->
+<!-- The layout for elements in this listview is in row_layout.xml -->
 <ListView 
     android:id="@+id/discovered_services_list"
     android:layout_width="fill_parent"
@@ -14,6 +14,7 @@
     android:id="@+id/mytextview"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent" 
+    android:layout_marginTop="20px"
     android:text="Hello World, Zeroconf"
     />
 </LinearLayout>

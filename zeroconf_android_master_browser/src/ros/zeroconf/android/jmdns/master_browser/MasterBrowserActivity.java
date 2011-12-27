@@ -155,8 +155,10 @@ public class MasterBrowserActivity extends Activity implements OnItemClickListen
 	private Zeroconf zeroconf;
 	private Logger logger;
 	private ListView lv;
+	private ArrayAdapter<String> adapter;
 	private TextView tv;
 	private String services_list[] = {"DudeMaster", "FooMaster"};
+	private String new_services_list[] = {"BarMaster", "FooMaster"};
 	
     /** Called when the activity is first created. */
     @Override
@@ -166,7 +168,9 @@ public class MasterBrowserActivity extends Activity implements OnItemClickListen
         setContentView(R.layout.main);
         lv = (ListView)findViewById(R.id.discovered_services_list);
         lv.setOnItemClickListener(this);
-        lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1 , services_list));
+//        adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1 , services_list);
+        adapter = new ArrayAdapter<String>(this, R.layout.row_layout, R.id.label, services_list);
+        lv.setAdapter(adapter);
         tv = (TextView)findViewById(R.id.mytextview);
         tv.setMovementMethod(new ScrollingMovementMethod());
         tv.setText("");
