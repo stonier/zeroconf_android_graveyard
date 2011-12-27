@@ -1,7 +1,11 @@
 package ros.zeroconf.android.jmdns.master_browser;
 
 import java.lang.Thread;
+import java.util.ArrayList;
 import java.util.List;
+
+import javax.jmdns.ServiceInfo;
+
 import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -74,6 +78,8 @@ public class MasterBrowserActivity extends Activity implements OnItemClickListen
 					android.util.Log.i("zeroconf", result);	
 					tv.append(result);
 					scrollToBottom();
+					discovered_service_names.remove(discovered_service.name);
+					adapter.notifyDataSetChanged();
 				}
 			});
 		}
@@ -93,43 +99,13 @@ public class MasterBrowserActivity extends Activity implements OnItemClickListen
 					android.util.Log.i("zeroconf", result);	
 					tv.append(result);
 			    	scrollToBottom();
+					discovered_service_names.add(discovered_service.name);
+					adapter.notifyDataSetChanged();
 				}
 			});
 		}
 	}
 
-	private class AddListenersTask extends AsyncTask<Zeroconf, String, Void> {
-
-		private DiscoveryHandler discovery_handler;
-
-		protected Void doInBackground(Zeroconf... zeroconfs) {
-			discovery_handler = new DiscoveryHandler();
-			if ( zeroconfs.length == 1 ) {
-				Zeroconf zconf = zeroconfs[0];
-				zconf.setDefaultDiscoveryCallback(discovery_handler);
-		        zconf.addListener("_ros-master._tcp","local");
-		        zconf.addListener("_ros-master._udp","local");
-		        zconf.addListener("_concert-master._tcp","local");
-		        zconf.addListener("_concert-master._udp","local");
-		        zconf.addListener("_app-manager._tcp","local");
-		        zconf.addListener("_app-manager._udp","local");
-		        
-		        publishProgress("*********** Discovering Ros Masters **************");
-			} else {
-				publishProgress("Error - DiscoveryTask::doInBackground received #zeroconfs != 1");
-			}
-			return null;
-	    }
-
-	    protected void onProgressUpdate(String... progress) {
-	    	for (String msg : progress ) {
-	    		android.util.Log.i("zeroconf", msg);	
-		    	tv.append(msg + "\n");
-	    	}
-	    	scrollToBottom();
-	    }
-	}
-	
 	private void scrollToBottom() {
     	int line_count = tv.getLineCount(); 
     	int view_height = tv.getHeight();
@@ -157,35 +133,50 @@ public class MasterBrowserActivity extends Activity implements OnItemClickListen
 	private ListView lv;
 	private ArrayAdapter<String> adapter;
 	private TextView tv;
+	private List<String> discovered_service_names;
 	private String services_list[] = {"DudeMaster", "FooMaster"};
 	private String new_services_list[] = {"BarMaster", "FooMaster"};
+	private DiscoveryHandler discovery_handler;
 	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        discovered_service_names = new ArrayList<String>();
         setContentView(R.layout.main);
-        lv = (ListView)findViewById(R.id.discovered_services_list);
+        lv = (ListView)findViewById(R.id.discovered_services_view);
         lv.setOnItemClickListener(this);
 //        adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1 , services_list);
-        adapter = new ArrayAdapter<String>(this, R.layout.row_layout, R.id.service_name, services_list);
+        adapter = new ArrayAdapter<String>(this, R.layout.row_layout, R.id.service_name, discovered_service_names);
         lv.setAdapter(adapter);
         tv = (TextView)findViewById(R.id.mytextview);
         tv.setMovementMethod(new ScrollingMovementMethod());
         tv.setText("");
-        logger = new Logger();
-		zeroconf = new Zeroconf(logger);
 		handler = new Handler();
 
-        new AddListenersTask().execute(zeroconf);
+        logger = new Logger();
+		zeroconf = new Zeroconf(logger);
+		discovery_handler = new DiscoveryHandler();
+		android.util.Log.i("zeroconf", "*********** Discovery Commencing **************");	
+		zeroconf.setDefaultDiscoveryCallback(discovery_handler);
+	    zeroconf.addListener("_ros-master._tcp","local");
+	    zeroconf.addListener("_ros-master._udp","local");
+	    zeroconf.addListener("_concert-master._tcp","local");
+	    zeroconf.addListener("_concert-master._udp","local");
+	    zeroconf.addListener("_app-manager._tcp","local");
+	    zeroconf.addListener("_app-manager._udp","local");
     }
     
     @Override
     public void onDestroy() {
     	logger.println("*********** Zeroconf Destroy **************");
         zeroconf.removeListener("_ros-master._tcp","local");
-		zeroconf.removeAllServices();
+	    zeroconf.removeListener("_ros-master._udp","local");
+	    zeroconf.removeListener("_concert-master._tcp","local");
+	    zeroconf.removeListener("_concert-master._udp","local");
+	    zeroconf.removeListener("_app-manager._tcp","local");
+	    zeroconf.removeListener("_app-manager._udp","local");
 		super.onDestroy();
     }
 }

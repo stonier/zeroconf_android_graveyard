@@ -6,7 +6,7 @@
     >
 <!-- The layout for elements in this listview is in row_layout.xml -->
 <ListView 
-    android:id="@+id/discovered_services_list"
+    android:id="@+id/discovered_services_view"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content" 
 />
