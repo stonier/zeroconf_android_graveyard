@@ -6,6 +6,12 @@ import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ListView;
+import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Toast;
 import android.widget.TextView;
 import android.text.method.ScrollingMovementMethod;
 import ros.zeroconf.jmdns.Zeroconf;
@@ -35,13 +41,16 @@ import org.ros.message.zeroconf_comms.DiscoveredService;
  * > avahi-browse -r _ros-master._tcp
  * 
  */
-public class MasterBrowserActivity extends Activity {
+public class MasterBrowserActivity extends Activity implements OnItemClickListener {
 
-	/****************************************
+	/*************************************************************************
 	 * Threads, Tasks and Handlers
-	 ****************************************/
+	 ************************************************************************/
 	private Handler handler;
 	
+	/*********************
+	 * Discovery Handler
+	 ********************/
 	public class DiscoveryHandler implements ZeroconfDiscoveryHandler {
 		
 		public void serviceAdded(DiscoveredService service) {
@@ -49,8 +58,8 @@ public class MasterBrowserActivity extends Activity {
 			handler.post(new Runnable() {
 				@Override
 				public void run() {
-					TextView tv = (TextView) findViewById(R.id.mytextview);
 			    	String result = "[+] Service added: " + discovered_service.name + "." + discovered_service.type + "." + discovered_service.domain + ".\n";
+					android.util.Log.i("zeroconf", result);	
 					tv.append(result);
 			    	scrollToBottom();
 				}
@@ -61,16 +70,10 @@ public class MasterBrowserActivity extends Activity {
 			handler.post(new Runnable() {
 				@Override
 				public void run() {
-					TextView tv = (TextView) findViewById(R.id.mytextview);
 			    	String result = "[-] Service removed: " + discovered_service.name + "." + discovered_service.type + "." + discovered_service.domain + ".\n";
+					android.util.Log.i("zeroconf", result);	
 					tv.append(result);
-			    	int line_count = tv.getLineCount(); 
-			    	int view_height = tv.getHeight();
-			    	int pixels_per_line = tv.getLineHeight();
-			    	int pixels_difference = line_count*pixels_per_line - view_height;
-			    	if ( pixels_difference > 0 ) {
-			    		tv.scrollTo(0, pixels_difference);
-			    	}
+					scrollToBottom();
 				}
 			});
 		}
@@ -79,7 +82,6 @@ public class MasterBrowserActivity extends Activity {
 			handler.post(new Runnable() {
 				@Override
 				public void run() {
-					TextView tv = (TextView) findViewById(R.id.mytextview);
 			    	String result = "[=] Service resolved: " + discovered_service.name + "." + discovered_service.type + "." + discovered_service.domain + ".\n";
 			    	result += "    Port   : " + discovered_service.port + "\n";
 			    	for ( String address : discovered_service.ipv4_addresses ) {
@@ -120,7 +122,6 @@ public class MasterBrowserActivity extends Activity {
 	    }
 
 	    protected void onProgressUpdate(String... progress) {
-	    	TextView tv = (TextView) findViewById(R.id.mytextview);
 	    	for (String msg : progress ) {
 	    		android.util.Log.i("zeroconf", msg);	
 		    	tv.append(msg + "\n");
@@ -130,7 +131,6 @@ public class MasterBrowserActivity extends Activity {
 	}
 	
 	private void scrollToBottom() {
-    	TextView tv = (TextView) findViewById(R.id.mytextview);
     	int line_count = tv.getLineCount(); 
     	int view_height = tv.getHeight();
     	int pixels_per_line = tv.getLineHeight();
@@ -140,11 +140,23 @@ public class MasterBrowserActivity extends Activity {
     	}
 	}
 
+	/*************************************************************************
+	 * Gui Callbacks
+	 ************************************************************************/
+
+	public void onItemClick(AdapterView adapter_view, View view, int position, long id) {
+		android.util.Log.i("zeroconf", "You clicked the list");
+		Toast.makeText(this, "You clicked entry #" + position ,Toast.LENGTH_LONG).show();
+	}
+	
 	/********************
 	 * Variables
 	 *******************/
 	private Zeroconf zeroconf;
 	private Logger logger;
+	private ListView lv;
+	private TextView tv;
+	private String services_list[] = {"DudeMaster", "FooMaster"};
 	
     /** Called when the activity is first created. */
     @Override
@@ -152,7 +164,10 @@ public class MasterBrowserActivity extends Activity {
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        TextView tv = (TextView)findViewById(R.id.mytextview);
+        lv = (ListView)findViewById(R.id.discovered_services_list);
+        lv.setOnItemClickListener(this);
+        lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1 , services_list));
+        tv = (TextView)findViewById(R.id.mytextview);
         tv.setMovementMethod(new ScrollingMovementMethod());
         tv.setText("");
         logger = new Logger();

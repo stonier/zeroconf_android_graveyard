@@ -5,7 +5,13 @@
     android:layout_height="fill_parent"
     >
 <!-- android:layout_height="wrap_content" -->
-<TextView android:id="@+id/mytextview"
+<ListView 
+    android:id="@+id/discovered_services_list"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content" 
+/>
+<TextView 
+    android:id="@+id/mytextview"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent" 
     android:text="Hello World, Zeroconf"
