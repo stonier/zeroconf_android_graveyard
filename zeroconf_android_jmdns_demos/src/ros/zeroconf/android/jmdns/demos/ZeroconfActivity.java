@@ -71,10 +71,10 @@ public class ZeroconfActivity extends Activity {
 		        zconf.addListener("_ros-master._tcp","local");
 		        publishProgress("*********** Discovering Ros Masters **************");
 		        int i = 0;
-		        while( i < 10 ) {
+		        while( i < 20 ) {
 		    		try {
 		    			List<DiscoveredService> discovered_services = zconf.listDiscoveredServices();
-		    			publishProgress("------------------------------------------");
+		    			publishProgress("------------------------------------------\n");
 		    			if ( discovered_services.size() > 0 ) {
 			    			for ( DiscoveredService discovered_service : discovered_services ) {
 				        		publishProgress(zconf.toString(discovered_service));
@@ -82,13 +82,14 @@ public class ZeroconfActivity extends Activity {
 		    			} else {
 			    			publishProgress("...");
 		    			}
-		        		Thread.sleep(1000L);
+		        		Thread.sleep(2000L);
 				    } catch (InterruptedException e) {
 				        e.printStackTrace();
 				    }
 		    		++i;
 		        }
 		        zconf.removeListener("_ros-master._tcp","local");
+		        publishProgress("*********** Done **************");
 			} else {
 				publishProgress("Error - DiscoveryTask::doInBackground received #zeroconfs != 1");
 			}
@@ -101,16 +102,20 @@ public class ZeroconfActivity extends Activity {
 	    		android.util.Log.i("zeroconf", msg);	
 		    	tv.append(msg + "\n");
 	    	}
-	    	int line_count = tv.getLineCount(); 
-	    	int view_height = tv.getHeight();
-	    	int pixels_per_line = tv.getLineHeight();
-	    	int pixels_difference = line_count*pixels_per_line - view_height;
-	    	if ( pixels_difference > 0 ) {
-	    		tv.scrollTo(0, pixels_difference);
-	    	}
+	    	scrollToBottom();
 	    }
 	}
 
+	private void scrollToBottom() {
+    	TextView tv = (TextView) findViewById(R.id.mytextview);
+    	int line_count = tv.getLineCount(); 
+    	int view_height = tv.getHeight();
+    	int pixels_per_line = tv.getLineHeight();
+    	int pixels_difference = line_count*pixels_per_line - view_height;
+    	if ( pixels_difference > 0 ) {
+    		tv.scrollTo(0, pixels_difference);
+    	}
+	}
 	/********************
 	 * Variables
 	 *******************/
@@ -130,6 +135,11 @@ public class ZeroconfActivity extends Activity {
 		zeroconf = new Zeroconf(logger);
 
         new PublisherTask().execute(zeroconf);
+		try {
+    		Thread.sleep(1000L);
+	    } catch (InterruptedException e) {
+	        e.printStackTrace();
+	    }
         new DiscoveryTask().execute(zeroconf);
     }
     

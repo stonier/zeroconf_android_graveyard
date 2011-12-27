@@ -11,6 +11,8 @@ import android.text.method.ScrollingMovementMethod;
 import ros.zeroconf.jmdns.Zeroconf;
 import ros.zeroconf.jmdns.ZeroconfDiscoveryHandler;
 import ros.zeroconf.android.jmdns.Logger;
+import ros.zeroconf.android.jmdns.master_browser.R;
+import org.ros.message.zeroconf_comms.DiscoveredService;
 
 // adb logcat System.out:I *:S
 // adb logcat zeroconf:I *:S
@@ -50,13 +52,7 @@ public class MasterBrowserActivity extends Activity {
 					TextView tv = (TextView) findViewById(R.id.mytextview);
 			    	String result = "[+] Service added: " + discovered_service.name + "." + discovered_service.type + "." + discovered_service.domain + ".\n";
 					tv.append(result);
-			    	int line_count = tv.getLineCount(); 
-			    	int view_height = tv.getHeight();
-			    	int pixels_per_line = tv.getLineHeight();
-			    	int pixels_difference = line_count*pixels_per_line - view_height;
-			    	if ( pixels_difference > 0 ) {
-			    		tv.scrollTo(0, pixels_difference);
-			    	}
+			    	scrollToBottom();
 				}
 			});
 		}
@@ -66,7 +62,7 @@ public class MasterBrowserActivity extends Activity {
 				@Override
 				public void run() {
 					TextView tv = (TextView) findViewById(R.id.mytextview);
-			    	String result = "[-] Service added: " + discovered_service.name + "." + discovered_service.type + "." + discovered_service.domain + ".\n";
+			    	String result = "[-] Service removed: " + discovered_service.name + "." + discovered_service.type + "." + discovered_service.domain + ".\n";
 					tv.append(result);
 			    	int line_count = tv.getLineCount(); 
 			    	int view_height = tv.getHeight();
@@ -94,13 +90,7 @@ public class MasterBrowserActivity extends Activity {
 			    	}
 					android.util.Log.i("zeroconf", result);	
 					tv.append(result);
-			    	int line_count = tv.getLineCount(); 
-			    	int view_height = tv.getHeight();
-			    	int pixels_per_line = tv.getLineHeight();
-			    	int pixels_difference = line_count*pixels_per_line - view_height;
-			    	if ( pixels_difference > 0 ) {
-			    		tv.scrollTo(0, pixels_difference);
-			    	}
+			    	scrollToBottom();
 				}
 			});
 		}
@@ -135,14 +125,19 @@ public class MasterBrowserActivity extends Activity {
 	    		android.util.Log.i("zeroconf", msg);	
 		    	tv.append(msg + "\n");
 	    	}
-	    	int line_count = tv.getLineCount(); 
-	    	int view_height = tv.getHeight();
-	    	int pixels_per_line = tv.getLineHeight();
-	    	int pixels_difference = line_count*pixels_per_line - view_height;
-	    	if ( pixels_difference > 0 ) {
-	    		tv.scrollTo(0, pixels_difference);
-	    	}
+	    	scrollToBottom();
 	    }
+	}
+	
+	private void scrollToBottom() {
+    	TextView tv = (TextView) findViewById(R.id.mytextview);
+    	int line_count = tv.getLineCount(); 
+    	int view_height = tv.getHeight();
+    	int pixels_per_line = tv.getLineHeight();
+    	int pixels_difference = line_count*pixels_per_line - view_height;
+    	if ( pixels_difference > 0 ) {
+    		tv.scrollTo(0, pixels_difference);
+    	}
 	}
 
 	/********************
