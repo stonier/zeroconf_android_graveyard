@@ -13,7 +13,10 @@ as a somewhat 'official' list internally.
 
 @section Android
 
- - http://stackoverflow.com/questions/4540754/add-dynamically-elements-to-a-listview-android
- - http://www.vogella.de/articles/AndroidListView/article.html
- - http://android-developers.blogspot.com/2009/02/android-layout-tricks-1.html
+ - Tutorial - http://www.vogella.de/articles/AndroidListView/article.html
+ - Relative layout for list items - http://android-developers.blogspot.com/2009/02/android-layout-tricks-1.html
+ - Dynamically populating the list - http://www.softwarepassion.com/android-series-custom-listview-items-and-adapters/
+ - Custom data with a custom adapter - http://stackoverflow.com/questions/4540754/add-dynamically-elements-to-a-listview-android
+ 
 */
+

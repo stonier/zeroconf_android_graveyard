@@ -3,14 +3,16 @@ package ros.zeroconf.android.jmdns.master_browser;
 import java.lang.Thread;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.jmdns.ServiceInfo;
-
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Bundle;
+import android.content.Context;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.LayoutInflater;
 import android.widget.ListView;
 import android.widget.ArrayAdapter;
 import android.widget.AdapterView;
@@ -78,8 +80,20 @@ public class MasterBrowserActivity extends Activity implements OnItemClickListen
 					android.util.Log.i("zeroconf", result);	
 					tv.append(result);
 					scrollToBottom();
-					discovered_service_names.remove(discovered_service.name);
-					adapter.notifyDataSetChanged();
+					int index = 0;
+					for ( DiscoveredService s : discovered_services ) {
+						if ( s.name.equals(discovered_service.name) ) {
+							break;
+						} else {
+							++index;
+						}
+					}
+					if ( index != discovered_services.size() ) {
+						discovered_services.remove(index);
+						discovery_adapter.notifyDataSetChanged();
+					} else {
+						android.util.Log.i("zeroconf", "Tried to remove a non-existant service");
+					}
 				}
 			});
 		}
@@ -89,7 +103,7 @@ public class MasterBrowserActivity extends Activity implements OnItemClickListen
 				@Override
 				public void run() {
 			    	String result = "[=] Service resolved: " + discovered_service.name + "." + discovered_service.type + "." + discovered_service.domain + ".\n";
-			    	result += "    Port   : " + discovered_service.port + "\n";
+			    	result += "    Port: " + discovered_service.port + "\n";
 			    	for ( String address : discovered_service.ipv4_addresses ) {
 			    		result += "    Address: " + address + "\n";
 			    	}
@@ -99,8 +113,20 @@ public class MasterBrowserActivity extends Activity implements OnItemClickListen
 					android.util.Log.i("zeroconf", result);	
 					tv.append(result);
 			    	scrollToBottom();
-					discovered_service_names.add(discovered_service.name);
-					adapter.notifyDataSetChanged();
+					int index = 0;
+					for ( DiscoveredService s : discovered_services ) {
+						if ( s.name.equals(discovered_service.name) ) {
+							break;
+						} else {
+							++index;
+						}
+					}
+					if ( index == discovered_services.size() ) {
+						discovered_services.add(discovered_service);
+						discovery_adapter.notifyDataSetChanged();
+					} else {
+						android.util.Log.i("zeroconf", "Tried to add an existing service (fix this)");
+					}
 				}
 			});
 		}
@@ -116,9 +142,9 @@ public class MasterBrowserActivity extends Activity implements OnItemClickListen
     	}
 	}
 
-	/*************************************************************************
+	/*******************
 	 * Gui Callbacks
-	 ************************************************************************/
+	 *******************/
 
 	public void onItemClick(AdapterView adapter_view, View view, int position, long id) {
 		android.util.Log.i("zeroconf", "You clicked the list");
@@ -126,16 +152,62 @@ public class MasterBrowserActivity extends Activity implements OnItemClickListen
 	}
 	
 	/********************
+	 * Discovery Task
+	 *******************/
+    private class AddListenersTask extends AsyncTask<Zeroconf, String, Void> {
+
+		private ProgressDialog commencing_dialog; 
+
+        protected Void doInBackground(Zeroconf... zeroconfs) {
+            if ( zeroconfs.length == 1 ) {
+                Zeroconf zconf = zeroconfs[0];
+				discovery_handler = new DiscoveryHandler();
+                zconf.setDefaultDiscoveryCallback(discovery_handler);
+                android.util.Log.i("zeroconf", "*********** Discovery Commencing **************");	
+				zeroconf.setDefaultDiscoveryCallback(discovery_handler);
+				try {
+		    		Thread.sleep(2000L);
+			    } catch (InterruptedException e) {
+			        e.printStackTrace();
+			    }
+                zconf.addListener("_ros-master._tcp","local");
+                zconf.addListener("_ros-master._udp","local");
+                zconf.addListener("_concert-master._tcp","local");
+                zconf.addListener("_concert-master._udp","local");
+                zconf.addListener("_app-manager._tcp","local");
+                zconf.addListener("_app-manager._udp","local");
+            } else {
+                publishProgress("Error - DiscoveryTask::doInBackground received #zeroconfs != 1");
+            }
+            return null;
+        }
+
+	    protected void onProgressUpdate(String... progress) {
+	        for (String msg : progress ) {
+	            android.util.Log.i("zeroconf", msg);
+	            tv.append(msg + "\n");
+	    	}
+	    	scrollToBottom();
+		}
+	    
+	    protected void onPreExecute() {
+			commencing_dialog = ProgressDialog.show(MasterBrowserActivity.this,
+					"Zeroconf Discovery", "Adding listeners...", true);
+	    }
+	    protected void onPostExecute(Void result) {
+	    	commencing_dialog.dismiss();
+	    }
+    }
+	
+	/********************
 	 * Variables
 	 *******************/
 	private Zeroconf zeroconf;
 	private Logger logger;
 	private ListView lv;
-	private ArrayAdapter<String> adapter;
+	private ArrayList<DiscoveredService> discovered_services;
+    private DiscoveredServiceAdapter discovery_adapter;
 	private TextView tv;
-	private List<String> discovered_service_names;
-	private String services_list[] = {"DudeMaster", "FooMaster"};
-	private String new_services_list[] = {"BarMaster", "FooMaster"};
 	private DiscoveryHandler discovery_handler;
 	
     /** Called when the activity is first created. */
@@ -143,29 +215,20 @@ public class MasterBrowserActivity extends Activity implements OnItemClickListen
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        discovered_service_names = new ArrayList<String>();
+        discovered_services = new ArrayList<DiscoveredService>();
         setContentView(R.layout.main);
         lv = (ListView)findViewById(R.id.discovered_services_view);
         lv.setOnItemClickListener(this);
-//        adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1 , services_list);
-        adapter = new ArrayAdapter<String>(this, R.layout.row_layout, R.id.service_name, discovered_service_names);
-        lv.setAdapter(adapter);
+        discovery_adapter = new DiscoveredServiceAdapter(this, discovered_services);
+        lv.setAdapter(discovery_adapter);
         tv = (TextView)findViewById(R.id.mytextview);
         tv.setMovementMethod(new ScrollingMovementMethod());
         tv.setText("");
 		handler = new Handler();
-
         logger = new Logger();
 		zeroconf = new Zeroconf(logger);
-		discovery_handler = new DiscoveryHandler();
-		android.util.Log.i("zeroconf", "*********** Discovery Commencing **************");	
-		zeroconf.setDefaultDiscoveryCallback(discovery_handler);
-	    zeroconf.addListener("_ros-master._tcp","local");
-	    zeroconf.addListener("_ros-master._udp","local");
-	    zeroconf.addListener("_concert-master._tcp","local");
-	    zeroconf.addListener("_concert-master._udp","local");
-	    zeroconf.addListener("_app-manager._tcp","local");
-	    zeroconf.addListener("_app-manager._udp","local");
+		
+		new AddListenersTask().execute(zeroconf);
     }
     
     @Override
