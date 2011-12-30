@@ -52,13 +52,24 @@ public class MasterBrowserActivity extends Activity implements OnItemClickListen
 	/*************************************************************************
 	 * Threads, Tasks and Handlers
 	 ************************************************************************/
-	private Handler handler;
 	
 	/*********************
 	 * Discovery Handler
 	 ********************/
 	public class DiscoveryHandler implements ZeroconfDiscoveryHandler {
-		
+
+		private ArrayList<DiscoveredService> discovered_services;
+	    private DiscoveredServiceAdapter discovery_adapter;
+		private TextView tv;
+		private Handler handler;
+
+		public DiscoveryHandler(Handler handler, TextView tv, DiscoveredServiceAdapter discovery_adapter, ArrayList<DiscoveredService> discovered_services) {
+			this.handler = handler;
+			this.tv = tv;
+			this.discovery_adapter = discovery_adapter;
+			this.discovered_services = discovered_services;
+		}
+
 		public void serviceAdded(DiscoveredService service) {
 			final DiscoveredService discovered_service = service;
 			handler.post(new Runnable() {
@@ -154,17 +165,14 @@ public class MasterBrowserActivity extends Activity implements OnItemClickListen
 	/********************
 	 * Discovery Task
 	 *******************/
-    private class AddListenersTask extends AsyncTask<Zeroconf, String, Void> {
+    private class DiscoverySetupTaskOld extends AsyncTask<Zeroconf, String, Void> {
 
-		private ProgressDialog commencing_dialog; 
-
+		private ProgressDialog commencing_dialog;
+		
         protected Void doInBackground(Zeroconf... zeroconfs) {
             if ( zeroconfs.length == 1 ) {
                 Zeroconf zconf = zeroconfs[0];
-				discovery_handler = new DiscoveryHandler();
-                zconf.setDefaultDiscoveryCallback(discovery_handler);
                 android.util.Log.i("zeroconf", "*********** Discovery Commencing **************");	
-				zeroconf.setDefaultDiscoveryCallback(discovery_handler);
 				try {
 		    		Thread.sleep(2000L);
 			    } catch (InterruptedException e) {
@@ -209,6 +217,7 @@ public class MasterBrowserActivity extends Activity implements OnItemClickListen
     private DiscoveredServiceAdapter discovery_adapter;
 	private TextView tv;
 	private DiscoveryHandler discovery_handler;
+	private Handler handler;
 	
     /** Called when the activity is first created. */
     @Override
@@ -224,11 +233,14 @@ public class MasterBrowserActivity extends Activity implements OnItemClickListen
         tv = (TextView)findViewById(R.id.mytextview);
         tv.setMovementMethod(new ScrollingMovementMethod());
         tv.setText("");
-		handler = new Handler();
+
+        handler = new Handler();
         logger = new Logger();
 		zeroconf = new Zeroconf(logger);
+		discovery_handler = new DiscoveryHandler(handler, tv, discovery_adapter, discovered_services);
+		zeroconf.setDefaultDiscoveryCallback(discovery_handler);
 		
-		new AddListenersTask().execute(zeroconf);
+		new DiscoverySetupTaskOld().execute(zeroconf);
     }
     
     @Override
