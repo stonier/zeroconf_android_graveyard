@@ -24,6 +24,7 @@ import ros.zeroconf.jmdns.Zeroconf;
 import ros.zeroconf.jmdns.ZeroconfDiscoveryHandler;
 import ros.zeroconf.android.jmdns.Logger;
 import ros.zeroconf.android.jmdns.master_browser.R;
+import ros.zeroconf.android.jmdns.master_browser.DiscoveredServiceAdapter;
 import org.ros.message.zeroconf_comms.DiscoveredService;
 
 // adb logcat System.out:I *:S
@@ -58,39 +59,94 @@ public class MasterBrowserActivity extends Activity implements OnItemClickListen
 	 ********************/
 	public class DiscoveryHandler implements ZeroconfDiscoveryHandler {
 
-		private ArrayList<DiscoveredService> discovered_services;
-	    private DiscoveredServiceAdapter discovery_adapter;
-		private TextView tv;
-		private Handler handler;
+		/*********************
+		 * Tasks
+		 ********************/
+		private class ServiceAddedTask extends AsyncTask<DiscoveredService, String, Void> {
+			
+		    protected Void doInBackground(DiscoveredService... services) {
+		        if ( services.length == 1 ) {
+		            DiscoveredService service = services[0];
+					String result = "[+] Service added: " + service.name + "." + service.type + "." + service.domain + ".";
+					publishProgress(result);
+		        } else {
+		            publishProgress("Error - ServiceAddedTask::doInBackground received #services != 1");
+		        }
+		        return null;
+		    }
 
-		public DiscoveryHandler(Handler handler, TextView tv, DiscoveredServiceAdapter discovery_adapter, ArrayList<DiscoveredService> discovered_services) {
-			this.handler = handler;
-			this.tv = tv;
-			this.discovery_adapter = discovery_adapter;
-			this.discovered_services = discovered_services;
+		    protected void onProgressUpdate(String... progress) {
+		    	uiLog(progress);
+			}
 		}
 
-		public void serviceAdded(DiscoveredService service) {
-			final DiscoveredService discovered_service = service;
-			handler.post(new Runnable() {
-				@Override
-				public void run() {
-			    	String result = "[+] Service added: " + discovered_service.name + "." + discovered_service.type + "." + discovered_service.domain + ".\n";
-					android.util.Log.i("zeroconf", result);	
-					tv.append(result);
-			    	scrollToBottom();
-				}
-			});
+		private class ServiceResolvedTask extends AsyncTask<DiscoveredService, String, DiscoveredService> {
+			
+		    protected DiscoveredService doInBackground(DiscoveredService... services) {
+		        if ( services.length == 1 ) {
+		            DiscoveredService discovered_service = services[0];
+			    	String result = "[=] Service resolved: " + discovered_service.name + "." + discovered_service.type + "." + discovered_service.domain + ".\n";
+			    	result += "    Port: " + discovered_service.port;
+			    	for ( String address : discovered_service.ipv4_addresses ) {
+			    		result += "\n    Address: " + address;
+			    	}
+			    	for ( String address : discovered_service.ipv6_addresses ) {
+			    		result += "\n    Address: " + address;
+			    	}
+			    	publishProgress(result);
+					int index = 0;
+					for ( DiscoveredService s : discovered_services ) {
+						if ( s.name.equals(discovered_service.name) ) {
+							break;
+						} else {
+							++index;
+						}
+					}
+					if ( index == discovered_services.size() ) {
+						return discovered_service;
+					} else {
+						android.util.Log.i("zeroconf", "Tried to add an existing service (fix this)");
+					}
+		        } else {
+		            publishProgress("Error - ServiceAddedTask::doInBackground received #services != 1");
+		        }
+		        return null;
+		    }
+
+		    protected void onProgressUpdate(String... progress) {
+		    	uiLog(progress);
+			}
+		    
+		    protected void onPostExecute(DiscoveredService discovered_service) {
+		    	// add to the content and notify the list view if its a new service
+		    	if ( discovered_service != null ) {
+					discovered_services.add(discovered_service);
+					adapter.notifyDataSetChanged();
+		    	}
+		    }
 		}
-		public void serviceRemoved(DiscoveredService service) {
-			final DiscoveredService discovered_service = service;
-			handler.post(new Runnable() {
-				@Override
-				public void run() {
-			    	String result = "[-] Service removed: " + discovered_service.name + "." + discovered_service.type + "." + discovered_service.domain + ".\n";
-					android.util.Log.i("zeroconf", result);	
-					tv.append(result);
-					scrollToBottom();
+		
+		private class ServiceRemovedTask extends AsyncTask<DiscoveredService, String, DiscoveredService> {
+			
+		    protected DiscoveredService doInBackground(DiscoveredService... services) {
+		        if ( services.length == 1 ) {
+		            DiscoveredService discovered_service = services[0];
+		            String result = "[-] Service removed: " + discovered_service.name + "." + discovered_service.type + "." + discovered_service.domain + ".\n";			    	result += "    Port: " + discovered_service.port;
+			    	publishProgress(result);
+			    	return discovered_service;
+		        } else {
+		            publishProgress("Error - ServiceAddedTask::doInBackground received #services != 1");
+		        }
+		        return null;
+		    }
+
+		    protected void onProgressUpdate(String... progress) {
+		    	uiLog(progress);
+			}
+		    
+		    protected void onPostExecute(DiscoveredService discovered_service) {
+		    	// remove service from storage and notify list view
+		    	if ( discovered_service != null ) {
 					int index = 0;
 					for ( DiscoveredService s : discovered_services ) {
 						if ( s.name.equals(discovered_service.name) ) {
@@ -105,41 +161,56 @@ public class MasterBrowserActivity extends Activity implements OnItemClickListen
 					} else {
 						android.util.Log.i("zeroconf", "Tried to remove a non-existant service");
 					}
-				}
-			});
+		    	}
+		    }
 		}
+
+		/*********************
+		 * Variables
+		 ********************/
+		private ArrayList<DiscoveredService> discovered_services;
+	    private DiscoveredServiceAdapter adapter;
+		private TextView text_view;
+
+		/*********************
+		 * Constructors
+		 ********************/
+		public DiscoveryHandler(TextView tv, DiscoveredServiceAdapter discovery_adapter, ArrayList<DiscoveredService> discovered_services) {
+			this.text_view = tv;
+			this.adapter = discovery_adapter;
+			this.discovered_services = discovered_services;
+		}
+
+		/*********************
+		 * Callbacks
+		 ********************/
+		public void serviceAdded(DiscoveredService service) {
+			new ServiceAddedTask().execute(service);
+		}
+		
+		public void serviceRemoved(DiscoveredService service) {
+			new ServiceRemovedTask().execute(service);
+		}
+		
 		public void serviceResolved(DiscoveredService service) {
-			final DiscoveredService discovered_service = service;
-			handler.post(new Runnable() {
-				@Override
-				public void run() {
-			    	String result = "[=] Service resolved: " + discovered_service.name + "." + discovered_service.type + "." + discovered_service.domain + ".\n";
-			    	result += "    Port: " + discovered_service.port + "\n";
-			    	for ( String address : discovered_service.ipv4_addresses ) {
-			    		result += "    Address: " + address + "\n";
-			    	}
-			    	for ( String address : discovered_service.ipv6_addresses ) {
-			    		result += "    Address: " + address + "\n";
-			    	}
-					android.util.Log.i("zeroconf", result);	
-					tv.append(result);
-			    	scrollToBottom();
-					int index = 0;
-					for ( DiscoveredService s : discovered_services ) {
-						if ( s.name.equals(discovered_service.name) ) {
-							break;
-						} else {
-							++index;
-						}
-					}
-					if ( index == discovered_services.size() ) {
-						discovered_services.add(discovered_service);
-						discovery_adapter.notifyDataSetChanged();
-					} else {
-						android.util.Log.i("zeroconf", "Tried to add an existing service (fix this)");
-					}
-				}
-			});
+			new ServiceResolvedTask().execute(service);
+		}
+
+		/*********************
+		 * Utility
+		 ********************/
+		private void uiLog(String... messages) {
+	        for (String msg : messages ) {
+	            android.util.Log.i("zeroconf", msg);
+	            text_view.append(msg + "\n");
+	    	}
+	    	int line_count = text_view.getLineCount(); 
+	    	int view_height = text_view.getHeight();
+	    	int pixels_per_line = text_view.getLineHeight();
+	    	int pixels_difference = line_count*pixels_per_line - view_height;
+	    	if ( pixels_difference > 0 ) {
+	    		text_view.scrollTo(0, pixels_difference);
+	    	}
 		}
 	}
 
@@ -217,7 +288,6 @@ public class MasterBrowserActivity extends Activity implements OnItemClickListen
     private DiscoveredServiceAdapter discovery_adapter;
 	private TextView tv;
 	private DiscoveryHandler discovery_handler;
-	private Handler handler;
 	
     /** Called when the activity is first created. */
     @Override
@@ -234,10 +304,9 @@ public class MasterBrowserActivity extends Activity implements OnItemClickListen
         tv.setMovementMethod(new ScrollingMovementMethod());
         tv.setText("");
 
-        handler = new Handler();
         logger = new Logger();
 		zeroconf = new Zeroconf(logger);
-		discovery_handler = new DiscoveryHandler(handler, tv, discovery_adapter, discovered_services);
+		discovery_handler = new DiscoveryHandler(tv, discovery_adapter, discovered_services);
 		zeroconf.setDefaultDiscoveryCallback(discovery_handler);
 		
 		new DiscoverySetupTaskOld().execute(zeroconf);
