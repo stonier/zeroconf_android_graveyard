@@ -10,12 +10,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import org.ros.message.zeroconf_comms.DiscoveredService;
 
-public class DiscoveredServiceAdapter extends ArrayAdapter<DiscoveredService> {
+public class DiscoveryAdapter extends ArrayAdapter<DiscoveredService> {
 
 	private final Context context;
 	private ArrayList<DiscoveredService> discovered_services;
 
-    public DiscoveredServiceAdapter(Context context, ArrayList<DiscoveredService> discovered_services) {
+    public DiscoveryAdapter(Context context, ArrayList<DiscoveredService> discovered_services) {
         super(context, R.layout.row_layout,discovered_services); // pass the list to the super
         this.context = context;
         this.discovered_services = discovered_services;  // keep a pointer locally so we can play with it

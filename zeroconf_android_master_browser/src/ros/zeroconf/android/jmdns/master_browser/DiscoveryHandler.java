@@ -128,13 +128,13 @@ public class DiscoveryHandler implements ZeroconfDiscoveryHandler {
 	 * Variables
 	 ********************/
 	private ArrayList<DiscoveredService> discovered_services;
-    private DiscoveredServiceAdapter discovery_adapter;
+    private DiscoveryAdapter discovery_adapter;
 	private TextView text_view;
 
 	/*********************
 	 * Constructors
 	 ********************/
-	public DiscoveryHandler(TextView tv, DiscoveredServiceAdapter discovery_adapter, ArrayList<DiscoveredService> discovered_services) {
+	public DiscoveryHandler(TextView tv, DiscoveryAdapter discovery_adapter, ArrayList<DiscoveredService> discovered_services) {
 		this.text_view = tv;
 		this.discovery_adapter = discovery_adapter;
 		this.discovered_services = discovered_services;

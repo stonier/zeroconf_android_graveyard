@@ -24,7 +24,8 @@ import ros.zeroconf.jmdns.ZeroconfDiscoveryHandler;
 import ros.zeroconf.android.jmdns.Logger;
 import ros.zeroconf.android.jmdns.master_browser.R;
 import ros.zeroconf.android.jmdns.master_browser.DiscoveryHandler;
-import ros.zeroconf.android.jmdns.master_browser.DiscoveredServiceAdapter;
+import ros.zeroconf.android.jmdns.master_browser.DiscoveryAdapter;
+import ros.zeroconf.android.jmdns.master_browser.DiscoverySetup;
 import org.ros.message.zeroconf_comms.DiscoveredService;
 
 // adb logcat System.out:I *:S
@@ -110,10 +111,10 @@ public class MasterBrowserActivity extends Activity {
 	 *******************/
 	private Zeroconf zeroconf;
 	private Logger logger;
+	private TextView tv;
 	private ListView lv;
 	private ArrayList<DiscoveredService> discovered_services;
-    private DiscoveredServiceAdapter discovery_adapter;
-	private TextView tv;
+    private DiscoveryAdapter discovery_adapter;
 	private DiscoveryHandler discovery_handler;
 	
     /** Called when the activity is first created. */
@@ -124,7 +125,7 @@ public class MasterBrowserActivity extends Activity {
         discovered_services = new ArrayList<DiscoveredService>();
         setContentView(R.layout.main);
         lv = (ListView)findViewById(R.id.discovered_services_view);
-        discovery_adapter = new DiscoveredServiceAdapter(this, discovered_services);
+        discovery_adapter = new DiscoveryAdapter(this, discovered_services);
         lv.setAdapter(discovery_adapter);
         tv = (TextView)findViewById(R.id.mytextview);
         tv.setMovementMethod(new ScrollingMovementMethod());
@@ -135,7 +136,7 @@ public class MasterBrowserActivity extends Activity {
 		discovery_handler = new DiscoveryHandler(tv, discovery_adapter, discovered_services);
 		zeroconf.setDefaultDiscoveryCallback(discovery_handler);
 		
-		new DiscoverySetupTaskOld().execute(zeroconf);
+		new DiscoverySetup(this).execute(zeroconf);
     }
     
     @Override
