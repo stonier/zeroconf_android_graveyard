@@ -90,7 +90,14 @@ public class DiscoveryHandler implements ZeroconfDiscoveryHandler {
 	    protected DiscoveredService doInBackground(DiscoveredService... services) {
 	        if ( services.length == 1 ) {
 	            DiscoveredService discovered_service = services[0];
-	            String result = "[-] Service removed: " + discovered_service.name + "." + discovered_service.type + "." + discovered_service.domain + ".\n";			    	result += "    Port: " + discovered_service.port;
+	            String result = "[-] Service removed: " + discovered_service.name + "." + discovered_service.type + "." + discovered_service.domain + ".\n";
+	            result += "    Port: " + discovered_service.port;
+		    	for ( String address : discovered_service.ipv4_addresses ) {
+		    		result += "\n    Address: " + address;
+		    	}
+		    	for ( String address : discovered_service.ipv6_addresses ) {
+		    		result += "\n    Address: " + address;
+		    	}
 		    	publishProgress(result);
 		    	return discovered_service;
 	        } else {

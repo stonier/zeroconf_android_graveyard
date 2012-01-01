@@ -1,5 +1,6 @@
 package ros.zeroconf.android.jmdns.master_browser;
 
+import java.io.IOException;
 import java.lang.Thread;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,61 +51,6 @@ import org.ros.message.zeroconf_comms.DiscoveredService;
  * Then run this program on your android while it is connected to the lan.
  */
 public class MasterBrowserActivity extends Activity {
-
-	private void scrollToBottom() {
-    	int line_count = tv.getLineCount(); 
-    	int view_height = tv.getHeight();
-    	int pixels_per_line = tv.getLineHeight();
-    	int pixels_difference = line_count*pixels_per_line - view_height;
-    	if ( pixels_difference > 0 ) {
-    		tv.scrollTo(0, pixels_difference);
-    	}
-	}
-	
-	/********************
-	 * Discovery Task
-	 *******************/
-    private class DiscoverySetupTaskOld extends AsyncTask<Zeroconf, String, Void> {
-
-		private ProgressDialog commencing_dialog;
-		
-        protected Void doInBackground(Zeroconf... zeroconfs) {
-            if ( zeroconfs.length == 1 ) {
-                Zeroconf zconf = zeroconfs[0];
-                android.util.Log.i("zeroconf", "*********** Discovery Commencing **************");	
-				try {
-		    		Thread.sleep(2000L);
-			    } catch (InterruptedException e) {
-			        e.printStackTrace();
-			    }
-                zconf.addListener("_ros-master._tcp","local");
-                zconf.addListener("_ros-master._udp","local");
-                zconf.addListener("_concert-master._tcp","local");
-                zconf.addListener("_concert-master._udp","local");
-                zconf.addListener("_app-manager._tcp","local");
-                zconf.addListener("_app-manager._udp","local");
-            } else {
-                publishProgress("Error - DiscoveryTask::doInBackground received #zeroconfs != 1");
-            }
-            return null;
-        }
-
-	    protected void onProgressUpdate(String... progress) {
-	        for (String msg : progress ) {
-	            android.util.Log.i("zeroconf", msg);
-	            tv.append(msg + "\n");
-	    	}
-	    	scrollToBottom();
-		}
-	    
-	    protected void onPreExecute() {
-			commencing_dialog = ProgressDialog.show(MasterBrowserActivity.this,
-					"Zeroconf Discovery", "Adding listeners...", true);
-	    }
-	    protected void onPostExecute(Void result) {
-	    	commencing_dialog.dismiss();
-	    }
-    }
 	
 	/********************
 	 * Variables
@@ -122,6 +68,7 @@ public class MasterBrowserActivity extends Activity {
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+    	android.util.Log.i("zeroconf","*********** Zeroconf Create **************");
         discovered_services = new ArrayList<DiscoveredService>();
         setContentView(R.layout.main);
         lv = (ListView)findViewById(R.id.discovered_services_view);
@@ -140,14 +87,32 @@ public class MasterBrowserActivity extends Activity {
     }
     
     @Override
+    public void onPause() {
+    	logger.println("*********** Zeroconf Pause **************");
+		super.onPause();
+    }
+
+    @Override
+    public void onStop() {
+    	logger.println("*********** Zeroconf Stop **************");
+		super.onStop();
+    }
+    
+    
+    @Override
     public void onDestroy() {
     	logger.println("*********** Zeroconf Destroy **************");
-        zeroconf.removeListener("_ros-master._tcp","local");
-	    zeroconf.removeListener("_ros-master._udp","local");
-	    zeroconf.removeListener("_concert-master._tcp","local");
-	    zeroconf.removeListener("_concert-master._udp","local");
-	    zeroconf.removeListener("_app-manager._tcp","local");
-	    zeroconf.removeListener("_app-manager._udp","local");
+//        zeroconf.removeListener("_ros-master._tcp","local");
+//	    zeroconf.removeListener("_ros-master._udp","local");
+//	    zeroconf.removeListener("_concert-master._tcp","local");
+//	    zeroconf.removeListener("_concert-master._udp","local");
+//	    zeroconf.removeListener("_app-manager._tcp","local");
+//	    zeroconf.removeListener("_app-manager._udp","local");
+	    try {
+	    	zeroconf.shutdown();
+        } catch (IOException e) {
+	        e.printStackTrace();
+        }
 		super.onDestroy();
     }
 }
