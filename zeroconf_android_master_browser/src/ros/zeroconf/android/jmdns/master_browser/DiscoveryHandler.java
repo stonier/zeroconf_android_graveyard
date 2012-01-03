@@ -53,19 +53,7 @@ public class DiscoveryHandler implements ZeroconfDiscoveryHandler {
 		    		result += "\n    Address: " + address;
 		    	}
 		    	publishProgress(result);
-				int index = 0;
-				for ( DiscoveredService s : discovered_services ) {
-					if ( s.name.equals(discovered_service.name) ) {
-						break;
-					} else {
-						++index;
-					}
-				}
-				if ( index == discovered_services.size() ) {
-					return discovered_service;
-				} else {
-					android.util.Log.i("zeroconf", "Tried to add an existing service (fix this)");
-				}
+		    	return discovered_service;
 	        } else {
 	            publishProgress("Error - ServiceAddedTask::doInBackground received #services != 1");
 	        }
@@ -79,8 +67,20 @@ public class DiscoveryHandler implements ZeroconfDiscoveryHandler {
 	    protected void onPostExecute(DiscoveredService discovered_service) {
 	    	// add to the content and notify the list view if its a new service
 	    	if ( discovered_service != null ) {
-				discovered_services.add(discovered_service);
-				discovery_adapter.notifyDataSetChanged();
+				int index = 0;
+				for ( DiscoveredService s : discovered_services ) {
+					if ( s.name.equals(discovered_service.name) ) {
+						break;
+					} else {
+						++index;
+					}
+				}
+				if ( index == discovered_services.size() ) {
+					discovered_services.add(discovered_service);
+					discovery_adapter.notifyDataSetChanged();
+				} else {
+					android.util.Log.i("zeroconf", "Tried to add an existing service (fix this)");
+				}
 	    	}
 	    }
 	}
